@@ -1,0 +1,149 @@
+import java.util.*
+
+class Car(val reg: String, val color: String) {
+    var spot : Int = 0
+    override fun toString(): String {
+        return "$spot $reg $color"
+    }
+}
+
+
+class ParkingLot {
+
+    private val emptySpot = Car("", "")
+    private val parkingLot = mutableListOf<Car>()
+
+    fun isCreated(): Boolean {
+        return if (parkingLot.size == 0) {
+            println("Sorry, a parking lot has not been created.")
+            false
+        } else true
+    }
+
+    fun status() {
+        if (isCreated()) {
+            if (parkingLot.takeWhile {it == emptySpot}.size == parkingLot.size) {
+                println("Parking lot is empty.")
+            } else {
+                for (spot in parkingLot) {
+                    if (spot != emptySpot) println(spot.toString())
+                }
+            }
+        }
+    }
+
+    fun regByColor(_color: String) {
+        val regByColor = mutableListOf<String>()
+        val color = _color.lowercase(Locale.getDefault())
+        if (color !in parkingLot.joinToString().lowercase(Locale.getDefault())) {
+            println("No cars with color $color were found.")
+        } else {
+            for (car in parkingLot) {
+                if (car.color.lowercase(Locale.getDefault()) == color) {
+                    regByColor.add(car.reg)
+                }
+            }
+            println(regByColor.joinToString())
+        }
+    }
+
+    fun spotByColor(_color: String) {
+        val spotByColor = mutableListOf<Int>()
+        val color = _color.lowercase(Locale.getDefault())
+        if (color !in parkingLot.joinToString().lowercase(Locale.getDefault())) {
+            println("No cars with color $color were found.")
+        } else {
+            for (car in parkingLot) {
+                if (car.color.lowercase(Locale.getDefault()) == color) {
+                    spotByColor.add(car.spot)
+                }
+            }
+            println(spotByColor.joinToString())
+        }
+    }
+
+    fun spotByReg(_reg: String) {
+        if (_reg in parkingLot.joinToString()) {
+            for (car in parkingLot) {
+                if (car.reg == _reg) {
+                    println(car.spot)
+                    break
+                }
+            }
+        } else {
+            println("No cars with registration number $_reg were found.")
+        }
+    }
+
+    fun create(numOfSpots: Int) {
+        parkingLot.clear()
+        repeat(numOfSpots) { parkingLot.add(emptySpot) }
+        println("Created a parking lot with $numOfSpots spots.")
+    }
+
+    fun toPark(car: Car) {
+        if (emptySpot !in parkingLot) {
+            println("Sorry, the parking lot is full.")
+        } else {
+            for (spot in parkingLot.indices) {
+                if (parkingLot[spot] == emptySpot) {
+                    parkingLot[spot] = car
+                    car.spot = spot + 1
+                    println("${car.color} car parked in spot ${car.spot}.")
+                    break
+                }
+            } 
+        }
+    }
+
+    fun toLeave(spot: Int) { 
+        if (parkingLot[spot - 1] == emptySpot) {
+            println("There is no car in spot $spot.")
+        } else {
+            println("Spot $spot is free.")
+            parkingLot[spot - 1] = emptySpot
+        }
+    }
+}
+
+class Command(_input: String) {
+    var input: String = _input.substringBefore(" ")
+    var reg: String = ""
+    var color: String = ""
+    var spot: Int = 0
+    init {
+        when (input) {
+            "park" -> { reg = _input.substringAfter(" ").substringBefore(" "); color = _input.substringAfterLast(" ") }
+            "leave", "create" -> { spot = _input.substringAfterLast(" ").toInt() }
+            "reg_by_color", "spot_by_color", "spot_by_reg" -> { color = _input.substringAfter(" ") }
+            else -> {
+                reg = ""
+                color = ""
+                spot = 0
+            }
+        }
+    }
+}
+
+fun main() {
+    val parking = ParkingLot()
+
+    loop@while (true) {
+        val command = Command(readLine()!!)
+        when (command.input) {
+            "create" -> {
+                parking.create(command.spot)
+            }
+            "park" -> if(parking.isCreated()){
+                    val car = Car(command.reg, command.color)
+                    parking.toPark(car)
+                }
+            "leave" -> if (parking.isCreated()) parking.toLeave(command.spot)
+            "status" -> if (parking.isCreated()) parking.status()
+            "reg_by_color" -> if (parking.isCreated()) parking.regByColor(command.color)
+            "spot_by_color" -> if (parking.isCreated()) parking.spotByColor(command.color)
+            "spot_by_reg" -> if (parking.isCreated()) parking.spotByReg(command.color)
+            "exit" -> break@loop
+        }
+    }
+}
